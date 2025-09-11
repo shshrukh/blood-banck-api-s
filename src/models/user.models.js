@@ -8,87 +8,80 @@ import bcrypt from "bcrypt";
 
 
 const userSchema = new mongoose.Schema({
-
-    firstName :{
+    firstName : {
         type : String,
         required : true,
         trim : true,
-        minLength : 3,
-        maxLength : 20, 
-        lowercase : true
-
-    }, 
+        lowercase : true,
+        match : [/^[a-zA-Z]+$/, "First name must contain only alphabets"]
+    },
     middleName : {
         type : String,
         trim : true,
         lowercase : true,
-        default : null
-    },
+        match : [/^[a-zA-Z]+$/, "Middle name must contain only alphabets"]
+    }, 
     lastName : {
         type : String,
         required : true,
-        trim : true,        
-        minLength : 3,
-        maxLength : 20, 
+        trim : true,
         lowercase : true,
-
+        match : [/^[a-zA-Z]+$/, "Last name must contain only alphabets"]    
     },
     email : {
-        type : String,
+        type : String,  
         required : true,
         unique : true,
-        match: [/^.+@gmail\.com$/, "Email must end with @gmail.com"]
-        
+        trim : true,
+        match : [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, "Please fill a valid email address"]
     },
-    gender:{
+    phoneNumber : {
         type : String,
         required : true,
-        enum :["male", "female", "other"]
+        unique : true,  
     },
     password : {
         type : String,
         required : true,
-        minLength : 6,  
-    },
-    phoneNumber : {
-        type : Number,
-        required : true,
-        unique : true,
-    },
-    bloodGroup : {
-        type : String,
-        required : true,
-        enum : ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]   
-    },
-    age : {
-        type : Number,
-        required : true,
-        min : 18,
-        max : 65   
-    },
-    location : {
-        type : mongoose.Schema.Types.ObjectId,
-        ref : "Location"
-    },
-    isDonor : {
-        type : Boolean
-    },
-    lastDonationDate : {
-        type : Date,
-        default : null
-    },
-    isavailable : {
-        type : Boolean,
-        default : true      
-    },
-    refreshToken : {
-        type : String,
-        default : null
+        minlength : [6, "Password must be at least 6 characters long"]
     },
     avatar : {
         type : String,
         default : null
+    },
+    dateOfBirth : {
+        type : Date,
+        default : null
+    },
+    bloodGroup : {
+        type : String,
+        enum : ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
+        default : null
+    },
+    location : {
+        type : mongoose.Schema.Types.ObjectId,
+        ref : "Location",
+
+    },
+    gender : {
+        type : String,  
+        required : true,
+        enum : ["male", "femaile", "other"],
+        lowercase : true,   
+        trim : true,
+    },
+    role : {
+        type : String,
+        enum : ["user", "superAdmin"],
+        default : "user",
+        lowercase : true,
+        trim : true,
+    },
+    refreshToken : {
+        types : String,
     }
+
+    
 },
 {
     timestamps : true

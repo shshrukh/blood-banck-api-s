@@ -1,15 +1,17 @@
 import asyncHandler from "../utils/asyncHandler.js";
-import User from "../models/user.models.js";
+import {User} from "../models/user.models.js";
 import ApiError from "../utils/ApiError.js";    
-import Location from "../models/location.models.js";
+import {Location} from "../models/location.models.js";
+import ApiResponce from "../utils/ApiResponce.js"
+import { configDotenv } from "dotenv";
 
-
+configDotenv({path: "./.env"});
 
 const registerUser = asyncHandler( async ( req, res )=>{
 
     const{ firstName, middleName, lastName, email, password,  phoneNumber, gender, province, district, city  }= req.body;
 
-    if([firstName, middleName, lastName, email, password, phoneNumber, gender, province, district, city].some( fields => fields.trim() === "")){
+    if([firstName, lastName, email, password, phoneNumber, gender, province, district, city].some( fields => fields.trim() === "")){
         throw new ApiError(400, "All fields are required");
     }
 
@@ -19,6 +21,8 @@ const registerUser = asyncHandler( async ( req, res )=>{
     }
 
     const location = await Location.create({province, district, city});
+    
+    
 
     const user = await User.create({
         firstName,
@@ -32,6 +36,18 @@ const registerUser = asyncHandler( async ( req, res )=>{
 
     })
 
+    const createUser =await User.findById(user._id).select("-password");
 
-    
-})
+    if(!createUser){
+        throw new ApiError(500, "user is not registered")
+    }
+    // console.log(createUser);
+
+    return res.status(201).json(new ApiResponce(201, createUser, "User registered successfully"));
+
+});
+
+
+
+
+export { registerUser }
