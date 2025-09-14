@@ -58,7 +58,7 @@ const registerUser = asyncHandler( async ( req, res )=>{
     })
 
     const createUser =await User.findById(user._id).select("-password");
-    console.log(createUser)
+    // console.log(createUser)
 
     if(!createUser){
         throw new ApiError(500, "user is not registered")
@@ -133,9 +133,15 @@ const changePassword = asyncHandler( async (req, res) =>{
 
     const user = await User.findById(req.user._id);
 
-    if(!user){
-        throw new ApiError(404, "User not found");
+    const isPasswordMatched = await user.isPasswordMatched(oldPassword);
+   
+    if(!isPasswordMatched){
+        throw new ApiError(401, "Old password is incorrect");
     }
+
+    user.password = newPassword;
+    await user.save({validateBeforeSave : false });
+    return res.status(200).json(new ApiResponce(200, null, "Password changed successfully"));
 
 });
 
@@ -143,6 +149,7 @@ const changePassword = asyncHandler( async (req, res) =>{
 const currentUser = asyncHandler( async (req, res) =>{
     return res.status(200).json(new ApiResponce(200, req.user, "Current user fetched successfully"));
 });
+
 
 
 export { registerUser, loginUser, logoutUser, currentUser };
