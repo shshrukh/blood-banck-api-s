@@ -130,10 +130,13 @@ const changePassword = asyncHandler( async (req, res) =>{
     if( !oldPassword && !newPassword){
         throw new ApiError(400, "All fields are required");
     }
-
+    // console.log(console.log(oldPassword, newPassword));
+    
     const user = await User.findById(req.user._id);
-
+    // console.log(user);
+    
     const isPasswordMatched = await user.isPasswordMatched(oldPassword);
+//    console.log(isPasswordMatched);
    
     if(!isPasswordMatched){
         throw new ApiError(401, "Old password is incorrect");
@@ -152,4 +155,4 @@ const currentUser = asyncHandler( async (req, res) =>{
 
 
 
-export { registerUser, loginUser, logoutUser, currentUser };
+export { registerUser, loginUser, logoutUser, currentUser, changePassword };
