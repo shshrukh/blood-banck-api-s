@@ -2,7 +2,8 @@ import asyncHandler from "../utils/asyncHandler.js";
 import {User} from "../models/user.models.js";
 import ApiError from "../utils/ApiError.js";    
 import {Location} from "../models/location.models.js";
-import ApiResponce from "../utils/ApiResponce.js"
+import ApiResponce from "../utils/ApiResponce.js";
+
 
 
 
@@ -114,7 +115,7 @@ const loginUser = asyncHandler( async (req, res) =>{
 
 
 const logoutUser = asyncHandler( async (req, res) =>{
-    await User.findByIdAndUpdate(req.user._id, { refreshToken : null }, { new : true});
+    await User.findByIdAndUpdate(req.user._id,  {$set:{refreshToken: null}} , { new : true});
     return res
         .status(200)
         .cookie("accessToken", null, { httpOnly : true, secure : true})
@@ -122,4 +123,26 @@ const logoutUser = asyncHandler( async (req, res) =>{
         .json(new ApiResponce(200, null, "User logged out successfully"));
 });
 
-export { registerUser, loginUser, logoutUser };
+
+const changePassword = asyncHandler( async (req, res) =>{
+    const { oldPassword, newPassword } = req.body;
+
+    if( !oldPassword && !newPassword){
+        throw new ApiError(400, "All fields are required");
+    }
+
+    const user = await User.findById(req.user._id);
+
+    if(!user){
+        throw new ApiError(404, "User not found");
+    }
+
+});
+
+
+const currentUser = asyncHandler( async (req, res) =>{
+    return res.status(200).json(new ApiResponce(200, req.user, "Current user fetched successfully"));
+});
+
+
+export { registerUser, loginUser, logoutUser, currentUser };
