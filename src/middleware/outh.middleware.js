@@ -1,33 +1,38 @@
 import ApiError from '../utils/ApiError.js';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/user.models.js';
+import ApiResponce from '../utils/ApiResponce.js';
 
 export const outhMiddleware = async (req, res, next) => {
-    // get token from headers
-    // verify token
-    // if valid, call next()    
-    // if not valid, return 401 Unauthorized
-    
 
-    const token = req.cookies?.accessToken || req.headers('Authorization').replace('Bearer ', '');  
 
     try {
-        if (!token) {
-            throw new ApiError(401, 'Unauthorized reaquest');
+        const token = req.cookies?.accessToken || req.headers['authorization'].replace('Bearer ', '');
+        // console.log("token from cookie or header", token);
+        let decodedToken;
+        try {
+            decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+
+        } catch (error) {
+            if (error.name === 'TokenExpiredError') {
+                throw new ApiError(401, "Invalid access token");
+
+            };
         }
-        
-        const decodeToken = jwt.verify( token, process.env.ACCESS_TOKEN_SECRET );
-    
-        const user = await User.findById(decodeToken?._id).select("-password -refreshToken");
-    
+
+        const user = await User.findById(decodedToken?._id).select("-password -refreshToken");
+        // console.log(decodedToken);
+
+
         if (!user) {
-            throw new ApiError(401, 'Unauthorized request, user not found');
+            throw new ApiError(404, "User not found");
         }
-    
+
         req.user = user;
-    
         next();
+
     } catch (error) {
-        console.log("error in varifying jwt middleware", error);
+        console.log("Error in varifing JWT token", error);
+
     }
 };

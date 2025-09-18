@@ -116,10 +116,15 @@ const loginUser = asyncHandler( async (req, res) =>{
 
 const logoutUser = asyncHandler( async (req, res) =>{
     await User.findByIdAndUpdate(req.user._id,  {$set:{refreshToken: null}} , { new : true});
+    const options = {
+        httpOnly : true,
+        secure : true,
+        sameSite : "strict"
+    }
     return res
         .status(200)
-        .cookie("accessToken", null, { httpOnly : true, secure : true})
-        .cookie("refreshToken", null, { httpOnly : true, secure : true})
+        .cookie("accessToken", null, options)
+        .cookie("refreshToken", null, options)
         .json(new ApiResponce(200, null, "User logged out successfully"));
 });
 
@@ -153,6 +158,64 @@ const currentUser = asyncHandler( async (req, res) =>{
     return res.status(200).json(new ApiResponce(200, req.user, "Current user fetched successfully"));
 });
 
+const searchBloodGroup = asyncHandler( async (req, res) =>{
+
+    const { bloodGroup, province, district, city } = req.query;
+    // console.log(req.query);
+    
+
+    if( !bloodGroup && !province && !district && !city ){
+        throw new ApiError(400, "All fields are required");
+    }
+   
+    const trimmedProvince = province?.trim().toLowerCase();
+    const trimmedDistrict = district?.trim().toLowerCase();
+    // console.log( trimmedProvince, trimmedDistrict);
+    
+  
+
+    // find the users having requested blood group and location
+
+    const bloodGroupUsers = await User.aggregate([
+        {$match : { bloodGroup : bloodGroup } },
+        {$lookup : {
+            from : "locations",
+            localField : "location",
+            foreignField : "_id",
+            as : "location"
+        }},
+        {$unwind : "$location"},
+        {$match : { 
+            "location.province" : trimmedProvince,
+            "location.district" : trimmedDistrict,
+            }
+        },
+        {
+            $project : {
+                _id : 0,
+                firstName : 1,
+                middleName : 1,
+                lastName : 1,
+                email : 1,
+                phoneNumber : 1,
+                bloodGroup : 1,
+            }
+        }
+        
+    ]);
+
+    if(bloodGroupUsers.length === 0){
+        return res.status(200).json(new ApiResponce(200, [], "No users found with the requested blood group and location"));
+    }
+    return res.status(200).json(new ApiResponce(200, bloodGroupUsers, "Users fetched successfully"));
 
 
-export { registerUser, loginUser, logoutUser, currentUser, changePassword };
+
+    
+
+
+});
+
+
+
+export { registerUser, loginUser, logoutUser, currentUser, changePassword, searchBloodGroup };
